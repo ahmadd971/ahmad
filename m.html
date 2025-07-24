@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect on Telegram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 8s linear infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            transition: all 1s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .card {
+            transform-style: preserve-3d;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card:hover {
+            transform: translateY(-15px) rotateX(10deg) rotateY(10deg);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+        }
+        
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .card:hover::after {
+            opacity: 1;
+        }
+        
+        .icon-3d {
+            transform: translateZ(30px);
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+        }
+        
+        .social-link {
+            transition: all 0.5s ease;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .social-link::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 100%);
+            transition: all 0.8s ease;
+            transform: rotate(35deg);
+        }
+        
+        .social-link:hover::before {
+            top: -30%;
+            left: -30%;
+        }
+        
+        .theme-purple {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        }
+        
+        .theme-coral {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa07a 100%);
+        }
+        
+        .theme-emerald {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .theme-midnight {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        }
+        
+        .theme-sunset {
+            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+        }
+        
+        .theme-ocean {
+            background: linear-gradient(135deg, #1A2980 0%, #26D0CE 100%);
+        }
+        
+        .theme-royal {
+            background: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%);
+        }
+        
+        .theme-cosmic {
+            background: linear-gradient(135deg, #8A2387 0%, #E94057 50%, #F27121 100%);
+        }
+        
+        .telegram { 
+            background: linear-gradient(45deg, #0088cc 0%, #00a2ff 100%); 
+            box-shadow: 0 10px 20px rgba(0, 136, 204, 0.3);
+        }
+        
+        .color-pill {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        .color-pill:hover {
+            transform: scale(1.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .color-pill.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 3px white;
+        }
+        
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            animation: float 10s infinite;
+        }
+        
+        .shape:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 70%;
+            left: 80%;
+            animation-delay: 1s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            top: 40%;
+            left: -100px;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(4) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            right: 10%;
+            animation-delay: 3s;
+        }
+        
+        .shape:nth-child(5) {
+            width: 250px;
+            height: 250px;
+            bottom: -50px;
+            left: 30%;
+            animation-delay: 4s;
+        }
+        
+        .glow {
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.7));
+        }
+        
+        @keyframes background-pan {
+            from { background-position: 0% center; }
+            to { background-position: -200% center; }
+        }
+        
+        .animated-bg {
+            animation: background-pan 8s linear infinite;
+            background-size: 200%;
+            transition: all 0.5s ease;
+        }
+        
+        .animated-bg.theme-purple {
+            background: linear-gradient(
+                to right,
+                #6a11cb,
+                #2575fc,
+                #8E37D7,
+                #6a11cb
+            );
+        }
+        
+        .animated-bg.theme-coral {
+            background: linear-gradient(
+                to right,
+                #ff6b6b,
+                #ffa07a,
+                #ff8c66,
+                #ff6b6b
+            );
+        }
+        
+        .animated-bg.theme-emerald {
+            background: linear-gradient(
+                to right,
+                #11998e,
+                #38ef7d,
+                #22c1c3,
+                #11998e
+            );
+        }
+        
+        .animated-bg.theme-midnight {
+            background: linear-gradient(
+                to right,
+                #0f2027,
+                #203a43,
+                #2c5364,
+                #0f2027
+            );
+        }
+        
+        .animated-bg.theme-sunset {
+            background: linear-gradient(
+                to right,
+                #FF416C,
+                #FF4B2B,
+                #FF7A51,
+                #FF416C
+            );
+        }
+        
+        .animated-bg.theme-ocean {
+            background: linear-gradient(
+                to right,
+                #1A2980,
+                #26D0CE,
+                #1A6DFF,
+                #1A2980
+            );
+        }
+        
+        .animated-bg.theme-royal {
+            background: linear-gradient(
+                to right,
+                #4A00E0,
+                #8E2DE2,
+                #6A3DE2,
+                #4A00E0
+            );
+        }
+        
+        .animated-bg.theme-cosmic {
+            background: linear-gradient(
+                to right,
+                #8A2387,
+                #E94057,
+                #F27121,
+                #8A2387
+            );
+        }
+        
+        .notification-enter {
+            animation: notification-enter 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        
+        @keyframes notification-enter {
+            0% {
+                transform: translate(-50%, 100px);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+        
+        .notification-exit {
+            animation: notification-exit 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        
+        @keyframes notification-exit {
+            0% {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, 100px);
+                opacity: 0;
+            }
+        }
+        
+        .btn-3d {
+            position: relative;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .btn-3d::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            bottom: -8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: inherit;
+            transform: translateZ(-1px);
+        }
+        
+        .btn-3d:active {
+            transform: translateY(4px);
+        }
+        
+        .btn-3d:active::before {
+            bottom: -4px;
+        }
+        
+        .telegram-plane {
+            position: absolute;
+            z-index: 10;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .telegram-plane.top-right {
+            top: 10%;
+            right: 10%;
+        }
+        
+        .telegram-plane.bottom-left {
+            bottom: 10%;
+            left: 10%;
+        }
+        
+        .message-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: float 4s ease-in-out infinite;
+            z-index: 5;
+        }
+        
+        .message-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 20px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: rgba(255, 255, 255, 0.1) transparent transparent;
+        }
+        
+        .message-bubble.one {
+            top: 25%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+        
+        .message-bubble.two {
+            bottom: 25%;
+            left: 15%;
+            animation-delay: 2s;
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: -1;
+        }
+        
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.1);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3);
+            }
+            70% {
+                box-shadow: 0 0 0 50px rgba(255, 255, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .telegram-icon {
+            filter: drop-shadow(0 0 8px rgba(0, 136, 204, 0.6));
+        }
+        
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 136, 204, 0.7);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .neon-glow:hover {
+            box-shadow: 0 0 30px rgba(0, 136, 204, 0.9);
+        }
+        
+        .flying-messages {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .flying-message {
+            position: absolute;
+            opacity: 0.2;
+            animation: flyMessage 15s linear infinite;
+        }
+        
+        @keyframes flyMessage {
+            0% {
+                transform: translateX(-100px) translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: translateX(calc(100vw + 100px)) translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .shimmer {
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) rotate(45deg);
+            }
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="theme-royal flex items-center justify-center p-6">
+    <div class="bg-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="pulse-ring"></div>
+    </div>
+    
+    <div class="flying-messages">
+        <div class="flying-message" style="top: 20%; left: 10%; animation-delay: 0s;">
+            <svg class="w-8 h-8 text-white/30" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+            </svg>
+        </div>
+        <div class="flying-message" style="top: 50%; left: 30%; animation-delay: 2s;">
+            <svg class="w-12 h-12 text-white/20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+            </svg>
+        </div>
+        <div class="flying-message" style="top: 70%; left: 20%; animation-delay: 5s;">
+            <svg class="w-10 h-10 text-white/25" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+            </svg>
+        </div>
+        <div class="flying-message" style="top: 30%; left: 60%; animation-delay: 7s;">
+            <svg class="w-14 h-14 text-white/15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+            </svg>
+        </div>
+        <div class="flying-message" style="top: 80%; left: 70%; animation-delay: 3s;">
+            <svg class="w-6 h-6 text-white/35" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="telegram-plane top-right">
+        <svg class="w-16 h-16 text-white/70" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+        </svg>
+    </div>
+    
+    <div class="telegram-plane bottom-left">
+        <svg class="w-12 h-12 text-white/70" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+        </svg>
+    </div>
+    
+    <div class="message-bubble one">Hey there! 👋</div>
+    <div class="message-bubble two">Let's connect! 🚀</div>
+
+    <div class="max-w-md w-full relative z-10">
+        <div class="text-center mb-12">
+            <div class="mb-4 inline-block relative">
+                <div class="absolute inset-0 rounded-full bg-blue-500/30 animate-ping-slow"></div>
+                <svg class="w-28 h-28 telegram-icon relative" viewBox="0 0 24 24" fill="#0088cc">
+                    <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm-2.426 14.741h-.012l-.001.001-.002-.001c-.244-.004-.436-.173-.477-.4l-.814-3.285 5.037-3.109c.127-.08.103-.128.041-.128-.062 0-.234.043-.361.097l-6.217 3.834-2.322-.807c-.536-.123-.546-.539.114-.803l9.034-3.44c.415-.154.81.103.647.647l-1.525 7.209c-.108.508-.547.628-.997.377l-2.785-2.036-.159 1.414c-.007.062-.024.124-.051.181z"/>
+                </svg>
+            </div>
+            <h1 class="text-5xl font-extrabold text-white mb-3 drop-shadow-lg glow tracking-tight">Connect With Me</h1>
+            <p class="text-white/80 text-xl mb-6">Let's chat on Telegram</p>
+            
+            <div class="flex justify-center mt-6 space-x-4">
+                <div class="color-pill theme-purple" onclick="changeTheme('purple')"></div>
+                <div class="color-pill theme-coral" onclick="changeTheme('coral')"></div>
+                <div class="color-pill theme-emerald" onclick="changeTheme('emerald')"></div>
+                <div class="color-pill theme-midnight" onclick="changeTheme('midnight')"></div>
+                <div class="color-pill theme-sunset" onclick="changeTheme('sunset')"></div>
+                <div class="color-pill theme-ocean" onclick="changeTheme('ocean')"></div>
+                <div class="color-pill theme-royal active" onclick="changeTheme('royal')"></div>
+                <div class="color-pill theme-cosmic" onclick="changeTheme('cosmic')"></div>
+            </div>
+        </div>
+        
+        <div class="space-y-8">
+            <!-- Main Telegram Card -->
+            <div class="card bg-white rounded-2xl overflow-hidden shadow-2xl transform transition hover:scale-105 neon-glow">
+                <a href="https://t.me/lawalawe" target="_blank" class="social-link telegram block p-8 relative">
+                    <div class="flex items-center">
+                        <div class="bg-white/20 rounded-full p-5 mr-6">
+                            <svg class="w-12 h-12 text-white icon-3d" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h2 class="text-3xl font-bold text-white mb-1">Telegram</h2>
+                            <p class="text-white/80 text-lg">@lawalawe</p>
+                        </div>
+                        <div class="animate-bounce-slow">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-2 right-2 bg-white/20 rounded-full px-3 py-1 text-xs text-white/90">
+                        Click to open
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Additional Telegram Features -->
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Telegram Channel -->
+                <div class="card glass-card transform transition hover:scale-105">
+                    <a href="https://t.me/lawalawe" target="_blank" class="block p-6 relative">
+                        <div class="text-center">
+                            <div class="bg-white/10 rounded-full p-4 inline-block mb-4">
+                                <svg class="w-8 h-8 text-white icon-3d" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1 17v-10l7 5.1-7 4.9z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-1">My Channel</h3>
+                            <p class="text-white/70 text-sm">Latest updates</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Telegram Group -->
+                <div class="card glass-card transform transition hover:scale-105">
+                    <a href="https://t.me/lawalawe" target="_blank" class="block p-6 relative">
+                        <div class="text-center">
+                            <div class="bg-white/10 rounded-full p-4 inline-block mb-4">
+                                <svg class="w-8 h-8 text-white icon-3d" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-6 13c.863 0 1.5-.697 1.5-1.5 0-.863-.697-1.5-1.5-1.5-.863 0-1.5.697-1.5 1.5 0 .803.637 1.5 1.5 1.5zm3-4c.863 0 1.5-.697 1.5-1.5 0-.863-.697-1.5-1.5-1.5-.863 0-1.5.697-1.5 1.5 0 .803.637 1.5 1.5 1.5zm6 0c.863 0 1.5-.697 1.5-1.5 0-.863-.697-1.5-1.5-1.5-.863 0-1.5.697-1.5 1.5 0 .803.637 1.5 1.5 1.5zm3 4c.863 0 1.5-.697 1.5-1.5 0-.863-.697-1.5-1.5-1.5-.863 0-1.5.697-1.5 1.5 0 .803.637 1.5 1.5 1.5z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-1">Community</h3>
+                            <p class="text-white/70 text-sm">Join the discussion</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- QR Code Card -->
+            <div class="card glass-card p-8 text-center transform transition hover:scale-105">
+                <h3 class="text-2xl font-bold text-white mb-4">Scan to Connect</h3>
+                <div class="bg-white inline-block p-3 rounded-xl mb-4 relative overflow-hidden">
+                    <div class="absolute inset-0 shimmer"></div>
+                    <svg class="w-48 h-48 relative z-10" viewBox="0 0 200 200">
+                        <!-- QR code SVG representation -->
+                        <rect x="0" y="0" width="200" height="200" fill="white"/>
+                        <g fill="#0088cc">
+                            <!-- QR code pattern - simplified for demo -->
+                            <rect x="20" y="20" width="40" height="40"/>
+                            <rect x="140" y="20" width="40" height="40"/>
+                            <rect x="20" y="140" width="40" height="40"/>
+                            <rect x="70" y="20" width="10" height="10"/>
+                            <rect x="90" y="20" width="10" height="10"/>
+                            <rect x="120" y="20" width="10" height="10"/>
+                            <rect x="20" y="70" width="10" height="10"/>
+                            <rect x="20" y="90" width="10" height="10"/>
+                            <rect x="20" y="120" width="10" height="10"/>
+                            <rect x="70" y="70" width="60" height="60"/>
+                            <rect x="140" y="70" width="10" height="10"/>
+                            <rect x="140" y="90" width="10" height="10"/>
+                            <rect x="140" y="120" width="10" height="10"/>
+                            <rect x="70" y="140" width="10" height="10"/>
+                            <rect x="90" y="140" width="10" height="10"/>
+                            <rect x="120" y="140" width="10" height="10"/>
+                            <rect x="170" y="170" width="10" height="10"/>
+                            <rect x="80" y="80" width="40" height="40" fill="white"/>
+                            <rect x="90" y="90" width="20" height="20"/>
+                        </g>
+                        <!-- Telegram logo in the center -->
+                        <circle cx="100" cy="100" r="15" fill="white"/>
+                        <path d="M107 94l-10 8-4-2-1 5c0 .7-.35.74-.7.3L89 99l-4.5 1c-1.08.25-1.1-.6.25-1l15.5-6c.5-.17.94.12.75.9z" fill="#0088cc"/>
+                    </svg>
+                </div>
+                <p class="text-white/80">Scan with your Telegram app</p>
+            </div>
+        </div>
+        
+        <div class="mt-12 text-center">
+            <a href="https://t.me/lawalawe" target="_blank" class="animated-bg theme-royal text-white font-bold py-4 px-10 rounded-full inline-block shadow-xl transform transition hover:scale-105 cursor-pointer btn-3d btn-shine">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"></path>
+                    </svg>
+                    <span class="text-lg">Connect Now</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="mt-8 text-center">
+            <button onclick="randomizeTheme()" class="bg-white/10 backdrop-blur-sm text-white py-2 px-4 rounded-full hover:bg-white/20 transition">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Change Theme</span>
+                </div>
+            </button>
+        </div>
+        
+        <div id="notification" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 py-4 px-8 rounded-full shadow-xl opacity-0 flex items-center z-50">
+            <svg class="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="notificationText" class="font-medium">Opening Telegram...</span>
+        </div>
+    </div>
+
+    <script>
+        // Theme configuration
+        const themes = {
+            purple: {
+                name: 'theme-purple',
+                bgClass: 'theme-purple',
+                emoji: '💜'
+            },
+            coral: {
+                name: 'theme-coral',
+                bgClass: 'theme-coral',
+                emoji: '🧡'
+            },
+            emerald: {
+                name: 'theme-emerald',
+                bgClass: 'theme-emerald',
+                emoji: '💚'
+            },
+            midnight: {
+                name: 'theme-midnight',
+                bgClass: 'theme-midnight',
+                emoji: '💙'
+            },
+            sunset: {
+                name: 'theme-sunset',
+                bgClass: 'theme-sunset',
+                emoji: '❤️'
+            },
+            ocean: {
+                name: 'theme-ocean',
+                bgClass: 'theme-ocean',
+                emoji: '🌊'
+            },
+            royal: {
+                name: 'theme-royal',
+                bgClass: 'theme-royal',
+                emoji: '👑'
+            },
+            cosmic: {
+                name: 'theme-cosmic',
+                bgClass: 'theme-cosmic',
+                emoji: '✨'
+            }
+        };
+        
+        // Change theme function
+        function changeTheme(themeName) {
+            // Remove all theme classes from body
+            document.body.classList.remove('theme-purple', 'theme-coral', 'theme-emerald', 'theme-midnight', 'theme-sunset', 'theme-ocean', 'theme-royal', 'theme-cosmic');
+            
+            // Add the selected theme class
+            document.body.classList.add(themes[themeName].bgClass);
+            
+            // Update the animated button background
+            const animatedBtn = document.querySelector('.animated-bg');
+            animatedBtn.classList.remove('theme-purple', 'theme-coral', 'theme-emerald', 'theme-midnight', 'theme-sunset', 'theme-ocean', 'theme-royal', 'theme-cosmic');
+            animatedBtn.classList.add(themes[themeName].bgClass);
+            
+            // Update active state on color pills
+            const pills = document.querySelectorAll('.color-pill');
+            pills.forEach(pill => pill.classList.remove('active'));
+            document.querySelector(`.color-pill.${themes[themeName].bgClass}`).classList.add('active');
+            
+            // Add a little animation to all cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.classList.add('animate-pulse-slow');
+                setTimeout(() => {
+                    card.classList.remove('animate-pulse-slow');
+                }, 1000);
+            });
+            
+            // Show theme change notification
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            notificationText.textContent = `${themes[themeName].emoji} Theme changed to ${themeName}!`;
+            
+            notification.classList.remove('notification-exit');
+            notification.classList.add('notification-enter');
+            notification.style.opacity = '1';
+            
+            setTimeout(() => {
+                notification.classList.remove('notification-enter');
+                notification.classList.add('notification-exit');
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                }, 500);
+            }, 2000);
+        }
+        
+        // Randomize theme function
+        function randomizeTheme() {
+            const themeNames = Object.keys(themes);
+            const randomTheme = themeNames[Math.floor(Math.random() * themeNames.length)];
+            changeTheme(randomTheme);
+            
+            // Add wiggle animation to telegram icons
+            document.querySelectorAll('.telegram-icon, .icon-3d').forEach(icon => {
+                icon.classList.add('animate-wiggle');
+                setTimeout(() => {
+                    icon.classList.remove('animate-wiggle');
+                }, 1000);
+            });
+        }
+        
+        // Add 3D effect on mouse move
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const angleY = (x - centerX) / 15;
+                    const angleX = (centerY - y) / 15;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateZ(20px)`;
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+                });
+                
+                // Add initial animation with delay for staggered effect
+                const index = Array.from(cards).indexOf(card);
+                setTimeout(() => {
+                    card.classList.add('animate-float');
+                }, index * 200);
+            });
+            
+            // Initialize the button animation
+            const btn = document.querySelector('.btn-3d');
+            btn.addEventListener('mousemove', function(e) {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const angleY = (x - centerX) / 30;
+                const angleX = (centerY - y) / 30;
+                
+                btn.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateZ(5px)`;
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                btn.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+            });
+            
+            // Create floating particles
+            createParticles();
+        });
+        
+        // Create floating particles in the background
+        function createParticles() {
+            const container = document.querySelector('.bg-shapes');
+            
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                const size = Math.random() * 10 + 3;
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                const delay = Math.random() * 5;
+                const duration = Math.random() * 10 + 10;
+                
+                particle.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    top: ${posY}%;
+                    left: ${posX}%;
+                    animation: float ${duration}s ease-in-out ${delay}s infinite;
+                `;
+                
+                container.appendChild(particle);
+            }
+        }
+        
+        // Handle link clicks to show notification
+        document.querySelectorAll('a[href^="https://t.me/"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Show notification
+                const notification = document.getElementById('notification');
+                const notificationText = document.getElementById('notificationText');
+                notificationText.textContent = "Opening Telegram...";
+                
+                notification.classList.remove('notification-exit');
+                notification.classList.add('notification-enter');
+                notification.style.opacity = '1';
+                
+                // Don't prevent default - let the link open
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96459edd2102d0e2',t:'MTc1MzM4MzIwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
